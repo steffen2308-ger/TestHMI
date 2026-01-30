@@ -33,91 +33,50 @@ class TestHMIApp:
 
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
-        self.content.columnconfigure(1, weight=1)
+        for col in range(4):
+            self.content.columnconfigure(col, weight=1)
 
         self.float_vcmd = (self.root.register(_validate_float), "%P")
         self.int_vcmd = (self.root.register(_validate_int), "%P")
 
-        self._build_buttons()
-        self._build_toggle_buttons()
-        self._build_text_fields()
-        self._build_inputs()
-        self._build_bottom_integer()
+        self._build_layout()
 
-    def _build_buttons(self) -> None:
-        buttons_frame = ttk.LabelFrame(self.content, text="Aktionen", padding=10)
-        buttons_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 12))
-        for i in range(3):
-            buttons_frame.columnconfigure(i, weight=1)
+    def _build_layout(self) -> None:
+        ttk.Label(self.content, text="Nummer").grid(row=0, column=0, sticky="w", pady=6)
+        ttk.Entry(self.content, validate="key", validatecommand=self.int_vcmd).grid(
+            row=0, column=1, sticky="ew", padx=(8, 12), pady=6
+        )
+        ttk.Button(self.content, text="ZUweisen").grid(
+            row=0, column=2, sticky="ew", pady=6
+        )
 
-        ttk.Button(buttons_frame, text="Button 1").grid(row=0, column=0, padx=6, sticky="ew")
-        ttk.Button(buttons_frame, text="Button 2").grid(row=0, column=1, padx=6, sticky="ew")
-        ttk.Button(buttons_frame, text="Button 3").grid(row=0, column=2, padx=6, sticky="ew")
+        ttk.Label(self.content, text="Mode").grid(row=1, column=0, sticky="nw", pady=6)
+        mode_frame = ttk.Frame(self.content)
+        mode_frame.grid(row=1, column=1, columnspan=2, sticky="w", pady=6)
 
-    def _build_toggle_buttons(self) -> None:
-        toggle_frame = ttk.LabelFrame(self.content, text="Optionen", padding=10)
-        toggle_frame.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(0, 12))
-        toggle_frame.columnconfigure((0, 1), weight=1)
-
-        green_mode = tk.BooleanVar(value=False)
-        operation_mode = tk.BooleanVar(value=False)
-
-        ttk.Checkbutton(
-            toggle_frame,
-            text="Green Mode",
-            variable=green_mode,
-            onvalue=True,
-            offvalue=False,
-        ).grid(row=0, column=0, padx=6, sticky="ew")
-        ttk.Checkbutton(
-            toggle_frame,
-            text="Operation Mode",
+        operation_mode = tk.IntVar(value=1)
+        ttk.Radiobutton(
+            mode_frame,
+            text="Operation Mode 1",
             variable=operation_mode,
-            onvalue=True,
-            offvalue=False,
-        ).grid(row=0, column=1, padx=6, sticky="ew")
+            value=1,
+        ).grid(row=0, column=0, sticky="w", pady=(0, 4))
+        ttk.Radiobutton(
+            mode_frame,
+            text="Operation Mode 2",
+            variable=operation_mode,
+            value=2,
+        ).grid(row=1, column=0, sticky="w")
 
-    def _build_text_fields(self) -> None:
-        text_frame = ttk.LabelFrame(self.content, text="Textfelder", padding=10)
-        text_frame.grid(row=2, column=0, columnspan=2, sticky="nsew", pady=(0, 12))
-        text_frame.columnconfigure(1, weight=1)
-
-        for i in range(5):
-            ttk.Label(text_frame, text=f"Textfeld {i + 1}:").grid(
-                row=i, column=0, sticky="w", pady=4
-            )
-            ttk.Entry(text_frame).grid(row=i, column=1, sticky="ew", pady=4)
-
-    def _build_inputs(self) -> None:
-        inputs_frame = ttk.LabelFrame(self.content, text="Eingabefelder", padding=10)
-        inputs_frame.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(0, 12))
-        inputs_frame.columnconfigure(1, weight=1)
-
-        ttk.Label(inputs_frame, text="Float 1:").grid(row=0, column=0, sticky="w", pady=4)
-        ttk.Entry(inputs_frame, validate="key", validatecommand=self.float_vcmd).grid(
-            row=0, column=1, sticky="ew", pady=4
+        ttk.Label(self.content, text="Nummer").grid(row=2, column=0, sticky="w", pady=6)
+        ttk.Entry(self.content, validate="key", validatecommand=self.int_vcmd).grid(
+            row=2, column=1, sticky="ew", padx=(8, 12), pady=6
         )
-
-        ttk.Label(inputs_frame, text="Float 2:").grid(row=1, column=0, sticky="w", pady=4)
-        ttk.Entry(inputs_frame, validate="key", validatecommand=self.float_vcmd).grid(
-            row=1, column=1, sticky="ew", pady=4
+        ttk.Button(self.content, text="Button 2").grid(
+            row=2, column=2, sticky="ew", pady=6, padx=(0, 8)
         )
-
-        ttk.Label(inputs_frame, text="Integer:").grid(row=2, column=0, sticky="w", pady=4)
-        ttk.Entry(inputs_frame, validate="key", validatecommand=self.int_vcmd).grid(
-            row=2, column=1, sticky="ew", pady=4
-        )
-
-    def _build_bottom_integer(self) -> None:
-        bottom_frame = ttk.Frame(self.content)
-        bottom_frame.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(0, 4))
-        bottom_frame.columnconfigure(1, weight=1)
-
-        ttk.Label(bottom_frame, text="Ganzzahl (unten):").grid(
-            row=0, column=0, sticky="w", pady=4
-        )
-        ttk.Entry(bottom_frame, validate="key", validatecommand=self.int_vcmd).grid(
-            row=0, column=1, sticky="ew", pady=4
+        ttk.Button(self.content, text="Button 3").grid(
+            row=2, column=3, sticky="ew", pady=6
         )
 
 
