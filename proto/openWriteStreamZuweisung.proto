@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package TESTHMI.V1;
+
+import "google/protobuf/timestamp.proto";
+
+message ZuweisungEntry_m {
+  uint32 id = 1;
+  string id_string = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}

@@ -1,5 +1,13 @@
+import threading
 import tkinter as tk
+from datetime import datetime, timezone
 from tkinter import ttk
+
+import grpc
+from google.protobuf import timestamp_pb2
+
+import openWriteStreamZuweisung_pb2
+import testhmi_pb2_grpc
 
 
 def _validate_float(text: str) -> bool:
@@ -38,24 +46,36 @@ class TestHMIApp:
         self.float_vcmd = (self.root.register(_validate_float), "%P")
         self.int_vcmd = (self.root.register(_validate_int), "%P")
 
+        self.green_mode = tk.BooleanVar(value=False)
+        self._zuweisung_stop_event = threading.Event()
+        self._zuweisung_thread: threading.Thread | None = None
+        self.grpc_client = GrpcClient()
+
         self._build_layout()
         self._fit_window_to_content()
 
     def _build_layout(self) -> None:
         ttk.Label(self.content, text="Nummer").grid(row=0, column=0, sticky="w", pady=6)
-        ttk.Entry(self.content, validate="key", validatecommand=self.int_vcmd).grid(
+        self.assign_number_entry = ttk.Entry(
+            self.content,
+            validate="key",
+            validatecommand=self.int_vcmd,
+        )
+        self.assign_number_entry.grid(
             row=0, column=1, sticky="ew", padx=(8, 12), pady=6
         )
-        ttk.Button(self.content, text="ZUweisen").grid(
-            row=0, column=2, sticky="ew", pady=6
-        )
+        ttk.Button(
+            self.content,
+            text="ZUweisen",
+            command=self._on_assign_clicked,
+        ).grid(row=0, column=2, sticky="ew", pady=6)
 
         ttk.Label(self.content, text="Mode").grid(row=1, column=0, sticky="w", pady=6)
-        green_mode = tk.BooleanVar(value=False)
         ttk.Checkbutton(
             self.content,
             text="Green Mode",
-            variable=green_mode,
+            variable=self.green_mode,
+            command=self._on_green_mode_changed,
         ).grid(row=1, column=1, sticky="w", pady=6)
 
         operation_mode = tk.StringVar(value="mode1")
@@ -82,15 +102,110 @@ class TestHMIApp:
         ttk.Button(self.content, text="Button 2").grid(
             row=4, column=2, sticky="ew", pady=6, padx=(0, 8)
         )
-        ttk.Button(self.content, text="Button 3").grid(
-            row=4, column=3, sticky="ew", pady=6
+        ttk.Button(
+            self.content,
+            text="Button 3",
+            command=self._on_button3_clicked,
+        ).grid(row=4, column=3, sticky="ew", pady=6)
+
+    def _on_assign_clicked(self) -> None:
+        if self.green_mode.get():
+            self._start_zuweisung_stream()
+
+    def _on_green_mode_changed(self) -> None:
+        if not self.green_mode.get():
+            self._stop_zuweisung_stream()
+
+    def _on_button3_clicked(self) -> None:
+        self._stop_zuweisung_stream()
+
+    def _start_zuweisung_stream(self) -> None:
+        if self._zuweisung_thread and self._zuweisung_thread.is_alive():
+            return
+        self._zuweisung_stop_event.clear()
+        self._zuweisung_thread = threading.Thread(
+            target=self._run_zuweisung_stream,
+            name="zuweisung-stream",
+            daemon=True,
         )
+        self._zuweisung_thread.start()
+
+    def _stop_zuweisung_stream(self) -> None:
+        self._zuweisung_stop_event.set()
+        if self._zuweisung_thread and self._zuweisung_thread.is_alive():
+            self._zuweisung_thread.join(timeout=2.0)
+
+    def _run_zuweisung_stream(self) -> None:
+        self.grpc_client.open_write_stream_zuweisung(self._zuweisung_entry_generator())
+
+    def _zuweisung_entry_generator(self):
+        while not self._zuweisung_stop_event.is_set() and self.green_mode.get():
+            entry = self._build_zuweisung_entry()
+            yield entry
+            self._zuweisung_stop_event.wait(1.0)
+
+    def _build_zuweisung_entry(self):
+        entry_id = self._parse_int(self.assign_number_entry.get())
+        timestamp = datetime.now(timezone.utc)
+        return ZuweisungEntry(
+            entry_id=entry_id,
+            entry_id_string=str(entry_id),
+            timestamp=timestamp,
+        )
+
+    @staticmethod
+    def _parse_int(value: str) -> int:
+        try:
+            return int(value)
+        except ValueError:
+            return 0
 
     def _fit_window_to_content(self) -> None:
         self.root.update_idletasks()
         width = self.root.winfo_reqwidth()
         height = self.root.winfo_reqheight()
         self.root.geometry(f"{width}x{height}")
+
+
+class ZuweisungEntry:
+    def __init__(self, entry_id: int, entry_id_string: str, timestamp: datetime) -> None:
+        self.entry_id = entry_id
+        self.entry_id_string = entry_id_string
+        self.timestamp = timestamp
+
+
+class GrpcClient:
+    def __init__(self, address: str = "localhost:50051") -> None:
+        self.address = address
+        self._channel = None
+        self._stub = None
+        self._enabled = self._initialize_grpc()
+
+    def _initialize_grpc(self) -> bool:
+        self._channel = grpc.insecure_channel(self.address)
+        self._stub = testhmi_pb2_grpc.TestHmiServiceStub(self._channel)
+        return True
+
+    def open_write_stream_zuweisung(self, entries) -> None:
+        if not self._enabled:
+            return
+        try:
+            self._stub.openWriteStreamZuweisung(self._convert_entries(entries))
+        except grpc.RpcError:
+            return
+
+    def _convert_entries(self, entries):
+        for entry in entries:
+            yield self._build_proto_entry(entry)
+
+    def _build_proto_entry(self, entry: ZuweisungEntry):
+        timestamp = timestamp_pb2.Timestamp()
+        timestamp.FromDatetime(entry.timestamp)
+        return openWriteStreamZuweisung_pb2.ZuweisungEntry_m(
+            id=entry.entry_id,
+            id_string=entry.entry_id_string,
+            timestamp=timestamp,
+        )
 
 
 def main() -> None:
