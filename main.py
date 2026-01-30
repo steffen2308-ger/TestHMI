@@ -26,7 +26,7 @@ class TestHMIApp:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
         self.root.title("TestHMI")
-        self.root.geometry("640x420")
+        self.root.geometry("720x560")
 
         self.content = ttk.Frame(self.root, padding=16)
         self.content.grid(row=0, column=0, sticky="nsew")
@@ -35,11 +35,14 @@ class TestHMIApp:
         self.root.rowconfigure(0, weight=1)
         self.content.columnconfigure(1, weight=1)
 
+        style = ttk.Style(self.root)
+        style.configure("ToggleButton.TButton", indicatoron=False, padding=(12, 6))
+
         self.float_vcmd = (self.root.register(_validate_float), "%P")
         self.int_vcmd = (self.root.register(_validate_int), "%P")
 
         self._build_buttons()
-        self._build_radio_buttons()
+        self._build_toggle_buttons()
         self._build_text_fields()
         self._build_inputs()
         self._build_bottom_integer()
@@ -54,17 +57,30 @@ class TestHMIApp:
         ttk.Button(buttons_frame, text="Button 2").grid(row=0, column=1, padx=6, sticky="ew")
         ttk.Button(buttons_frame, text="Button 3").grid(row=0, column=2, padx=6, sticky="ew")
 
-    def _build_radio_buttons(self) -> None:
-        radio_frame = ttk.LabelFrame(self.content, text="Modus", padding=10)
-        radio_frame.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(0, 12))
+    def _build_toggle_buttons(self) -> None:
+        toggle_frame = ttk.LabelFrame(self.content, text="Optionen", padding=10)
+        toggle_frame.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(0, 12))
+        toggle_frame.columnconfigure((0, 1), weight=1)
 
-        radio_value = tk.StringVar(value="A")
-        ttk.Radiobutton(radio_frame, text="Option A", variable=radio_value, value="A").grid(
-            row=0, column=0, padx=6, sticky="w"
-        )
-        ttk.Radiobutton(radio_frame, text="Option B", variable=radio_value, value="B").grid(
-            row=0, column=1, padx=6, sticky="w"
-        )
+        option_a = tk.BooleanVar(value=False)
+        option_b = tk.BooleanVar(value=False)
+
+        ttk.Checkbutton(
+            toggle_frame,
+            text="Option A",
+            variable=option_a,
+            onvalue=True,
+            offvalue=False,
+            style="ToggleButton.TButton",
+        ).grid(row=0, column=0, padx=6, sticky="ew")
+        ttk.Checkbutton(
+            toggle_frame,
+            text="Option B",
+            variable=option_b,
+            onvalue=True,
+            offvalue=False,
+            style="ToggleButton.TButton",
+        ).grid(row=0, column=1, padx=6, sticky="ew")
 
     def _build_text_fields(self) -> None:
         text_frame = ttk.LabelFrame(self.content, text="Textfelder", padding=10)
