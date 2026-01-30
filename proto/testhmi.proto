@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package TESTHMI.V1;
+
+import "google/protobuf/empty.proto";
+import "openWriteStreamZuweisung.proto";
+
+service TestHmiService {
+  rpc openWriteStreamZuweisung(stream ZuweisungEntry_m) returns (google.protobuf.Empty) {}
+}
