@@ -110,7 +110,7 @@ class TestHMIApp:
 
     def _on_assign_clicked(self) -> None:
         if self.green_mode.get():
-            self._start_zuweisung_stream()
+            self._restart_zuweisung_stream()
 
     def _on_green_mode_changed(self) -> None:
         if not self.green_mode.get():
@@ -129,6 +129,10 @@ class TestHMIApp:
             daemon=True,
         )
         self._zuweisung_thread.start()
+
+    def _restart_zuweisung_stream(self) -> None:
+        self._stop_zuweisung_stream()
+        self._start_zuweisung_stream()
 
     def _stop_zuweisung_stream(self) -> None:
         self._zuweisung_stop_event.set()
