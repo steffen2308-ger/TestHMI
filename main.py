@@ -26,7 +26,6 @@ class TestHMIApp:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
         self.root.title("TestHMI")
-        self.root.geometry("720x560")
 
         self.content = ttk.Frame(self.root, padding=16)
         self.content.grid(row=0, column=0, sticky="nsew")
@@ -40,6 +39,7 @@ class TestHMIApp:
         self.int_vcmd = (self.root.register(_validate_int), "%P")
 
         self._build_layout()
+        self._fit_window_to_content()
 
     def _build_layout(self) -> None:
         ttk.Label(self.content, text="Nummer").grid(row=0, column=0, sticky="w", pady=6)
@@ -52,14 +52,11 @@ class TestHMIApp:
 
         ttk.Label(self.content, text="Mode").grid(row=1, column=0, sticky="w", pady=6)
         green_mode = tk.BooleanVar(value=False)
-        ttk.Label(self.content, text="Green Mode").grid(
-            row=1, column=1, sticky="w", pady=6
-        )
         ttk.Checkbutton(
             self.content,
-            text="",
+            text="Green Mode",
             variable=green_mode,
-        ).grid(row=1, column=2, sticky="w", pady=6)
+        ).grid(row=1, column=1, sticky="w", pady=6)
 
         operation_mode = tk.StringVar(value="mode1")
         ttk.Label(self.content, text="Operation2").grid(
@@ -88,6 +85,12 @@ class TestHMIApp:
         ttk.Button(self.content, text="Button 3").grid(
             row=4, column=3, sticky="ew", pady=6
         )
+
+    def _fit_window_to_content(self) -> None:
+        self.root.update_idletasks()
+        width = self.root.winfo_reqwidth()
+        height = self.root.winfo_reqheight()
+        self.root.geometry(f"{width}x{height}")
 
 
 def main() -> None:
