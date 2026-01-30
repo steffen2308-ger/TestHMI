@@ -50,23 +50,13 @@ class TestHMIApp:
             row=0, column=2, sticky="ew", pady=6
         )
 
-        ttk.Label(self.content, text="Mode").grid(row=1, column=0, sticky="nw", pady=6)
-        mode_frame = ttk.Frame(self.content)
-        mode_frame.grid(row=1, column=1, columnspan=2, sticky="w", pady=6)
-
-        operation_mode = tk.IntVar(value=1)
-        ttk.Radiobutton(
-            mode_frame,
-            text="Operation Mode 1",
-            variable=operation_mode,
-            value=1,
-        ).grid(row=0, column=0, sticky="w", pady=(0, 4))
-        ttk.Radiobutton(
-            mode_frame,
-            text="Operation Mode 2",
-            variable=operation_mode,
-            value=2,
-        ).grid(row=1, column=0, sticky="w")
+        ttk.Label(self.content, text="Mode").grid(row=1, column=0, sticky="w", pady=6)
+        green_mode = tk.BooleanVar(value=False)
+        ttk.Checkbutton(
+            self.content,
+            text="Green Mode",
+            variable=green_mode,
+        ).grid(row=1, column=1, columnspan=2, sticky="w", pady=6)
 
         ttk.Label(self.content, text="Nummer").grid(row=2, column=0, sticky="w", pady=6)
         ttk.Entry(self.content, validate="key", validatecommand=self.int_vcmd).grid(
