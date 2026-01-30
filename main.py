@@ -35,9 +35,6 @@ class TestHMIApp:
         self.root.rowconfigure(0, weight=1)
         self.content.columnconfigure(1, weight=1)
 
-        style = ttk.Style(self.root)
-        style.configure("ToggleButton.TButton", indicatoron=False, padding=(12, 6))
-
         self.float_vcmd = (self.root.register(_validate_float), "%P")
         self.int_vcmd = (self.root.register(_validate_int), "%P")
 
@@ -62,24 +59,22 @@ class TestHMIApp:
         toggle_frame.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(0, 12))
         toggle_frame.columnconfigure((0, 1), weight=1)
 
-        option_a = tk.BooleanVar(value=False)
-        option_b = tk.BooleanVar(value=False)
+        green_mode = tk.BooleanVar(value=False)
+        operation_mode = tk.BooleanVar(value=False)
 
         ttk.Checkbutton(
             toggle_frame,
-            text="Option A",
-            variable=option_a,
+            text="Green Mode",
+            variable=green_mode,
             onvalue=True,
             offvalue=False,
-            style="ToggleButton.TButton",
         ).grid(row=0, column=0, padx=6, sticky="ew")
         ttk.Checkbutton(
             toggle_frame,
-            text="Option B",
-            variable=option_b,
+            text="Operation Mode",
+            variable=operation_mode,
             onvalue=True,
             offvalue=False,
-            style="ToggleButton.TButton",
         ).grid(row=0, column=1, padx=6, sticky="ew")
 
     def _build_text_fields(self) -> None:
