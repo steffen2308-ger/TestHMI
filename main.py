@@ -52,16 +52,19 @@ class TestHMIApp:
 
         ttk.Label(self.content, text="Mode").grid(row=1, column=0, sticky="w", pady=6)
         green_mode = tk.BooleanVar(value=False)
+        ttk.Label(self.content, text="Green Mode").grid(
+            row=1, column=1, sticky="w", pady=6
+        )
         ttk.Checkbutton(
             self.content,
             text="",
             variable=green_mode,
-        ).grid(row=1, column=1, sticky="w", pady=6)
-        ttk.Label(self.content, text="Green Mode").grid(
-            row=1, column=2, sticky="w", pady=6
-        )
+        ).grid(row=1, column=2, sticky="w", pady=6)
 
         operation_mode = tk.StringVar(value="mode1")
+        ttk.Label(self.content, text="Operation2").grid(
+            row=2, column=0, sticky="w", pady=4
+        )
         ttk.Radiobutton(
             self.content,
             text="Operation Mode 1",
