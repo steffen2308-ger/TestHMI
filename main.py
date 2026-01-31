@@ -122,7 +122,12 @@ class TestHMIApp:
             row=4, column=1, sticky="ew", padx=(8, 12), pady=6
         )
         ttk.Button(self.content, text="Button 2").grid(
-            row=4, column=2, sticky="ew", pady=6, padx=(0, 8)
+            row=4,
+            column=2,
+            sticky="ew",
+            pady=6,
+            padx=(0, 8),
+            command=self._on_button2_clicked,
         )
         ttk.Button(
             self.content,
@@ -156,6 +161,17 @@ class TestHMIApp:
         result_name = testhmi_pb2.DeleteZuweisungResult_e.Name(
             response.success_state
         )
+        self._set_status_message(result_name)
+
+    def _on_button2_clicked(self) -> None:
+        raw_id = self.delete_number_entry.get().strip()
+        nummer = self._parse_int(raw_id)
+        request_id = raw_id or str(nummer)
+        response = self.grpc_client.button2_aktion(request_id, nummer)
+        if response is None:
+            self._set_status_message("RPC-Fehler")
+            return
+        result_name = testhmi_pb2.Button2Result_e.Name(response.button2_result)
         self._set_status_message(result_name)
 
     def _start_zuweisung_stream(self) -> None:
@@ -351,6 +367,17 @@ class GrpcClient:
         request = testhmi_pb2.DeleteZuweisungRequest(target_id=target_id)
         try:
             return self._stub.DeleteZuweisung(request)
+        except grpc.RpcError:
+            return None
+
+    def button2_aktion(
+        self, request_id: str, nummer: int
+    ) -> testhmi_pb2.Button2Response | None:
+        if not self._enabled:
+            return None
+        request = testhmi_pb2.Button2Request(id=request_id, nummer=nummer)
+        try:
+            return self._stub.Button2Aktion(request)
         except grpc.RpcError:
             return None
 

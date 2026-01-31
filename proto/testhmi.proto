@@ -52,9 +52,25 @@ enum DeleteZuweisungResult_e {
   DELETE_ZUWEISUNG_RESULT_ERROR = 2;
 }
 
+message Button2Request {
+  string id = 1;
+  uint32 nummer = 2;
+}
+
+message Button2Response {
+  Button2Result_e button2_result = 1;
+}
+
+enum Button2Result_e {
+  BUTTON2_RESULT_UNSPECIFIED = 0;
+  BUTTON2_RESULT_ACCEPTED = 1;
+  BUTTON2_RESULT_DENIED = 2;
+}
+
 service TestHmiService {
   rpc openWriteStreamZuweisung(stream ZuweisungEntry_m) returns (google.protobuf.Empty) {}
   rpc openReadStreamAktion(google.protobuf.Empty) returns (stream AktionEntry_m) {}
   rpc openReadStreamStatus(google.protobuf.Empty) returns (stream StatusEntry_m) {}
   rpc DeleteZuweisung(DeleteZuweisungRequest) returns (DeleteZuweisungResponse) {}
+  rpc Button2Aktion(Button2Request) returns (Button2Response) {}
 }

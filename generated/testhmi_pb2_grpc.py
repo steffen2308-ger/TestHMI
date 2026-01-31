@@ -56,6 +56,11 @@ class TestHmiServiceStub(object):
                 request_serializer=testhmi__pb2.DeleteZuweisungRequest.SerializeToString,
                 response_deserializer=testhmi__pb2.DeleteZuweisungResponse.FromString,
                 _registered_method=True)
+        self.Button2Aktion = channel.unary_unary(
+                '/TESTHMI.V1.TestHmiService/Button2Aktion',
+                request_serializer=testhmi__pb2.Button2Request.SerializeToString,
+                response_deserializer=testhmi__pb2.Button2Response.FromString,
+                _registered_method=True)
 
 
 class TestHmiServiceServicer(object):
@@ -85,6 +90,12 @@ class TestHmiServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Button2Aktion(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_TestHmiServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -107,6 +118,11 @@ def add_TestHmiServiceServicer_to_server(servicer, server):
                     servicer.DeleteZuweisung,
                     request_deserializer=testhmi__pb2.DeleteZuweisungRequest.FromString,
                     response_serializer=testhmi__pb2.DeleteZuweisungResponse.SerializeToString,
+            ),
+            'Button2Aktion': grpc.unary_unary_rpc_method_handler(
+                    servicer.Button2Aktion,
+                    request_deserializer=testhmi__pb2.Button2Request.FromString,
+                    response_serializer=testhmi__pb2.Button2Response.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -217,6 +233,33 @@ class TestHmiService(object):
             '/TESTHMI.V1.TestHmiService/DeleteZuweisung',
             testhmi__pb2.DeleteZuweisungRequest.SerializeToString,
             testhmi__pb2.DeleteZuweisungResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Button2Aktion(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/TESTHMI.V1.TestHmiService/Button2Aktion',
+            testhmi__pb2.Button2Request.SerializeToString,
+            testhmi__pb2.Button2Response.FromString,
             options,
             channel_credentials,
             insecure,
