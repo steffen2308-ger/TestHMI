@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
-import openWriteStreamZuweisung_pb2 as openWriteStreamZuweisung__pb2
+from . import openWriteStreamZuweisung_pb2 as openWriteStreamZuweisung__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rtesthmi.proto\x12\nTESTHMI.V1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eopenWriteStreamZuweisung.proto\"5\n\rAktionEntry_m\x12$\n\x06\x61ktion\x18\x01 \x01(\x0b\x32\x14.TESTHMI.V1.Aktion_m\"\x92\x01\n\x08\x41ktion_m\x12-\n\ttimestamp\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\n\n\x02id\x18\x02 \x01(\t\x12\x16\n\x0e\x61ktions_nummer\x18\x03 \x01(\r\x12\x33\n\x0e\x61ktions_status\x18\x04 \x01(\x0e\x32\x1b.TESTHMI.V1.AktionsStatus_e*f\n\x0f\x41ktionsStatus_e\x12\x1e\n\x1a\x41KTIONS_STATUS_UNSPECIFIED\x10\x00\x12\x18\n\x14\x41KTIONS_STATUS_START\x10\x01\x12\x19\n\x15\x41KTIONS_STATUS_CLOSED\x10\x02\x32\xb5\x01\n\x0eTestHmiService\x12T\n\x18openWriteStreamZuweisung\x12\x1c.TESTHMI.V1.ZuweisungEntry_m\x1a\x16.google.protobuf.Empty\"\x00(\x01\x12M\n\x14openReadStreamAktion\x12\x16.google.protobuf.Empty\x1a\x19.TESTHMI.V1.AktionEntry_m\"\x00\x30\x01\x62\x06proto3')
