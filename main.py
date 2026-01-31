@@ -1,5 +1,7 @@
+import json
 import threading
 import tkinter as tk
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from tkinter import ttk
 
@@ -32,8 +34,26 @@ def _validate_int(text: str) -> bool:
         return False
 
 
+@dataclass(frozen=True)
+class GrpcConfig:
+    address: str = "localhost:50051"
+
+
+def load_grpc_config(path: str = "grpc_config.json") -> GrpcConfig:
+    default_config = GrpcConfig()
+    try:
+        with open(path, "r", encoding="utf-8") as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        return default_config
+    except (json.JSONDecodeError, OSError):
+        return default_config
+    address = data.get("address", default_config.address)
+    return GrpcConfig(address=address)
+
+
 class TestHMIApp:
-    def __init__(self, root: tk.Tk) -> None:
+    def __init__(self, root: tk.Tk, grpc_config: GrpcConfig) -> None:
         self.root = root
         self.root.title("TestHMI")
 
@@ -56,7 +76,7 @@ class TestHMIApp:
         self._aktion_stream_started = False
         self._status_stop_event = threading.Event()
         self._status_thread: threading.Thread | None = None
-        self.grpc_client = GrpcClient()
+        self.grpc_client = GrpcClient(address=grpc_config.address)
         self.zuweisung_result_var = tk.StringVar(value="")
         self.status_message_var = tk.StringVar(value="")
         self.output_message_var = tk.StringVar(value="")
@@ -426,7 +446,8 @@ class GrpcClient:
 
 def main() -> None:
     root = tk.Tk()
-    TestHMIApp(root)
+    grpc_config = load_grpc_config()
+    TestHMIApp(root, grpc_config)
     root.mainloop()
 
 
