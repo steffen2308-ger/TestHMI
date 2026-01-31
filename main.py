@@ -59,6 +59,8 @@ class TestHMIApp:
         self.grpc_client = GrpcClient()
         self.zuweisung_result_var = tk.StringVar(value="")
         self.status_message_var = tk.StringVar(value="")
+        self.output_message_var = tk.StringVar(value="")
+        self.operation_mode = tk.StringVar(value="mode1")
 
         self._build_layout()
         self._fit_window_to_content()
@@ -95,7 +97,6 @@ class TestHMIApp:
             command=self._on_green_mode_changed,
         ).grid(row=1, column=1, sticky="w", pady=6)
 
-        operation_mode = tk.StringVar(value="mode1")
         ttk.Label(self.content, text="Operation2").grid(
             row=2, column=0, sticky="w", pady=4
         )
@@ -103,13 +104,15 @@ class TestHMIApp:
             self.content,
             text="Operation Mode 1",
             value="mode1",
-            variable=operation_mode,
+            variable=self.operation_mode,
+            command=self._on_operation_changed,
         ).grid(row=2, column=1, sticky="w", pady=4)
         ttk.Radiobutton(
             self.content,
             text="Operation Mode 2",
             value="mode2",
-            variable=operation_mode,
+            variable=self.operation_mode,
+            command=self._on_operation_changed,
         ).grid(row=3, column=1, sticky="w", pady=4)
 
         ttk.Label(self.content, text="Nummer").grid(row=4, column=0, sticky="w", pady=6)
@@ -144,6 +147,17 @@ class TestHMIApp:
             state="readonly",
         ).grid(row=5, column=1, columnspan=3, sticky="ew", pady=6, padx=(8, 0))
 
+        ttk.Label(self.content, text="Output").grid(
+            row=6, column=0, sticky="w", pady=6
+        )
+        ttk.Entry(
+            self.content,
+            textvariable=self.output_message_var,
+            state="readonly",
+        ).grid(row=6, column=1, columnspan=3, sticky="ew", pady=6, padx=(8, 0))
+
+        self._on_operation_changed()
+
     def _on_assign_clicked(self) -> None:
         if self.green_mode.get():
             self._restart_zuweisung_stream()
@@ -173,6 +187,15 @@ class TestHMIApp:
             return
         result_name = testhmi_pb2.Button2Result_e.Name(response.button2_result)
         self._set_status_message(result_name)
+
+    def _on_operation_changed(self) -> None:
+        mode = self.operation_mode.get()
+        if mode == "mode1":
+            self._set_output_message("Operation1")
+        elif mode == "mode2":
+            self._set_output_message("Operation2")
+        else:
+            self._set_output_message("")
 
     def _start_zuweisung_stream(self) -> None:
         if self._zuweisung_thread and self._zuweisung_thread.is_alive():
@@ -297,6 +320,9 @@ class TestHMIApp:
 
     def _set_status_message(self, text: str) -> None:
         self.root.after(0, self.status_message_var.set, text)
+
+    def _set_output_message(self, text: str) -> None:
+        self.root.after(0, self.output_message_var.set, text)
 
     @staticmethod
     def _format_grpc_error(error: grpc.RpcError) -> str:
