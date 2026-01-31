@@ -72,6 +72,7 @@ class TestHMIApp:
             validate="key",
             validatecommand=self.int_vcmd,
         )
+        self.assign_number_entry.insert(0, "1234")
         self.assign_number_entry.grid(
             row=0, column=1, sticky="ew", padx=(8, 12), pady=6
         )
