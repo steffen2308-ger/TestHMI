@@ -16,19 +16,27 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from . import openWriteStreamZuweisung_pb2 as openWriteStreamZuweisung__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rtesthmi.proto\x12\nTESTHMI.V1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eopenWriteStreamZuweisung.proto\"5\n\rAktionEntry_m\x12$\n\x06\x61ktion\x18\x01 \x01(\x0b\x32\x14.TESTHMI.V1.Aktion_m\"\x92\x01\n\x08\x41ktion_m\x12-\n\ttimestamp\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\n\n\x02id\x18\x02 \x01(\t\x12\x16\n\x0e\x61ktions_nummer\x18\x03 \x01(\r\x12\x33\n\x0e\x61ktions_status\x18\x04 \x01(\x0e\x32\x1b.TESTHMI.V1.AktionsStatus_e*f\n\x0f\x41ktionsStatus_e\x12\x1e\n\x1a\x41KTIONS_STATUS_UNSPECIFIED\x10\x00\x12\x18\n\x14\x41KTIONS_STATUS_START\x10\x01\x12\x19\n\x15\x41KTIONS_STATUS_CLOSED\x10\x02\x32\xb5\x01\n\x0eTestHmiService\x12T\n\x18openWriteStreamZuweisung\x12\x1c.TESTHMI.V1.ZuweisungEntry_m\x1a\x16.google.protobuf.Empty\"\x00(\x01\x12M\n\x14openReadStreamAktion\x12\x16.google.protobuf.Empty\x1a\x19.TESTHMI.V1.AktionEntry_m\"\x00\x30\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rtesthmi.proto\x12\nTESTHMI.V1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eopenWriteStreamZuweisung.proto\"5\n\rAktionEntry_m\x12$\n\x06\x61ktion\x18\x01 \x01(\x0b\x32\x14.TESTHMI.V1.Aktion_m\"\x92\x01\n\x08\x41ktion_m\x12-\n\ttimestamp\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\n\n\x02id\x18\x02 \x01(\t\x12\x16\n\x0e\x61ktions_nummer\x18\x03 \x01(\r\x12\x33\n\x0e\x61ktions_status\x18\x04 \x01(\x0e\x32\x1b.TESTHMI.V1.AktionsStatus_e\"5\n\rStatusEntry_m\x12$\n\x06\x61ktion\x18\x01 \x01(\x0b\x32\x14.TESTHMI.V1.Status_m\"i\n\x08Status_m\x12\"\n\x05state\x18\x01 \x03(\x0b\x32\x13.TESTHMI.V1.state_m\x12\x39\n\x11operations_status\x18\x02 \x01(\x0e\x32\x1e.TESTHMI.V1.OperationsStatus_e\"\t\n\x07state_m*f\n\x0f\x41ktionsStatus_e\x12\x1e\n\x1a\x41KTIONS_STATUS_UNSPECIFIED\x10\x00\x12\x18\n\x14\x41KTIONS_STATUS_START\x10\x01\x12\x19\n\x15\x41KTIONS_STATUS_CLOSED\x10\x02*7\n\x12OperationsStatus_e\x12!\n\x1dOPERATIONS_STATUS_UNSPECIFIED\x10\x00\x32\x84\x02\n\x0eTestHmiService\x12T\n\x18openWriteStreamZuweisung\x12\x1c.TESTHMI.V1.ZuweisungEntry_m\x1a\x16.google.protobuf.Empty\"\x00(\x01\x12M\n\x14openReadStreamAktion\x12\x16.google.protobuf.Empty\x1a\x19.TESTHMI.V1.AktionEntry_m\"\x00\x30\x01\x12M\n\x14openReadStreamStatus\x12\x16.google.protobuf.Empty\x1a\x19.TESTHMI.V1.StatusEntry_m\"\x00\x30\x01\x62\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'testhmi_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _AKTIONSSTATUS_E._serialized_start=327
-  _AKTIONSSTATUS_E._serialized_end=429
+  _AKTIONSSTATUS_E._serialized_start=500
+  _AKTIONSSTATUS_E._serialized_end=602
+  _OPERATIONSSTATUS_E._serialized_start=604
+  _OPERATIONSSTATUS_E._serialized_end=659
   _AKTIONENTRY_M._serialized_start=123
   _AKTIONENTRY_M._serialized_end=176
   _AKTION_M._serialized_start=179
   _AKTION_M._serialized_end=325
-  _TESTHMISERVICE._serialized_start=432
-  _TESTHMISERVICE._serialized_end=613
+  _STATUSENTRY_M._serialized_start=327
+  _STATUSENTRY_M._serialized_end=380
+  _STATUS_M._serialized_start=382
+  _STATUS_M._serialized_end=487
+  _STATE_M._serialized_start=489
+  _STATE_M._serialized_end=498
+  _TESTHMISERVICE._serialized_start=662
+  _TESTHMISERVICE._serialized_end=922
 # @@protoc_insertion_point(module_scope)

@@ -23,7 +23,23 @@ enum AktionsStatus_e {
   AKTIONS_STATUS_CLOSED = 2;
 }
 
+message StatusEntry_m {
+  Status_m aktion = 1;
+}
+
+message Status_m {
+  repeated state_m state = 1;
+  OperationsStatus_e operations_status = 2;
+}
+
+message state_m {}
+
+enum OperationsStatus_e {
+  OPERATIONS_STATUS_UNSPECIFIED = 0;
+}
+
 service TestHmiService {
   rpc openWriteStreamZuweisung(stream ZuweisungEntry_m) returns (google.protobuf.Empty) {}
   rpc openReadStreamAktion(google.protobuf.Empty) returns (stream AktionEntry_m) {}
+  rpc openReadStreamStatus(google.protobuf.Empty) returns (stream StatusEntry_m) {}
 }
