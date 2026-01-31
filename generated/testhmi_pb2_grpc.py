@@ -5,6 +5,7 @@ import warnings
 
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 from . import openWriteStreamZuweisung_pb2 as openWriteStreamZuweisung__pb2
+from . import testhmi_pb2 as testhmi__pb2
 
 GRPC_GENERATED_VERSION = '1.76.0'
 GRPC_VERSION = grpc.__version__
@@ -40,12 +41,23 @@ class TestHmiServiceStub(object):
                 request_serializer=openWriteStreamZuweisung__pb2.ZuweisungEntry_m.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
+        self.openReadStreamAktion = channel.unary_stream(
+                '/TESTHMI.V1.TestHmiService/openReadStreamAktion',
+                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+                response_deserializer=testhmi__pb2.AktionEntry_m.FromString,
+                _registered_method=True)
 
 
 class TestHmiServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def openWriteStreamZuweisung(self, request_iterator, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def openReadStreamAktion(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -58,6 +70,11 @@ def add_TestHmiServiceServicer_to_server(servicer, server):
                     servicer.openWriteStreamZuweisung,
                     request_deserializer=openWriteStreamZuweisung__pb2.ZuweisungEntry_m.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'openReadStreamAktion': grpc.unary_stream_rpc_method_handler(
+                    servicer.openReadStreamAktion,
+                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                    response_serializer=testhmi__pb2.AktionEntry_m.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -87,6 +104,33 @@ class TestHmiService(object):
             '/TESTHMI.V1.TestHmiService/openWriteStreamZuweisung',
             openWriteStreamZuweisung__pb2.ZuweisungEntry_m.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def openReadStreamAktion(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/TESTHMI.V1.TestHmiService/openReadStreamAktion',
+            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            testhmi__pb2.AktionEntry_m.FromString,
             options,
             channel_credentials,
             insecure,

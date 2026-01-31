@@ -4,9 +4,11 @@ from datetime import datetime, timezone
 from tkinter import ttk
 
 import grpc
+from google.protobuf import empty_pb2
 from google.protobuf import timestamp_pb2
 
 from generated import openWriteStreamZuweisung_pb2
+from generated import testhmi_pb2
 from generated import testhmi_pb2_grpc
 
 
@@ -49,6 +51,9 @@ class TestHMIApp:
         self.green_mode = tk.BooleanVar(value=False)
         self._zuweisung_stop_event = threading.Event()
         self._zuweisung_thread: threading.Thread | None = None
+        self._aktion_stop_event = threading.Event()
+        self._aktion_thread: threading.Thread | None = None
+        self._aktion_stream_started = False
         self.grpc_client = GrpcClient()
 
         self._build_layout()
@@ -122,6 +127,7 @@ class TestHMIApp:
     def _start_zuweisung_stream(self) -> None:
         if self._zuweisung_thread and self._zuweisung_thread.is_alive():
             return
+        self._aktion_stream_started = False
         self._zuweisung_stop_event.clear()
         self._zuweisung_thread = threading.Thread(
             target=self._run_zuweisung_stream,
@@ -138,15 +144,49 @@ class TestHMIApp:
         self._zuweisung_stop_event.set()
         if self._zuweisung_thread and self._zuweisung_thread.is_alive():
             self._zuweisung_thread.join(timeout=2.0)
+        self._stop_aktion_stream()
 
     def _run_zuweisung_stream(self) -> None:
         self.grpc_client.open_write_stream_zuweisung(self._zuweisung_entry_generator())
 
     def _zuweisung_entry_generator(self):
         while not self._zuweisung_stop_event.is_set() and self.green_mode.get():
+            if not self._aktion_stream_started:
+                self._aktion_stream_started = True
+                self._start_aktion_stream()
             entry = self._build_zuweisung_entry()
             yield entry
             self._zuweisung_stop_event.wait(1.0)
+
+    def _start_aktion_stream(self) -> None:
+        if self._aktion_thread and self._aktion_thread.is_alive():
+            return
+        self._aktion_stop_event.clear()
+        self._aktion_thread = threading.Thread(
+            target=self._run_aktion_stream,
+            name="aktion-stream",
+            daemon=True,
+        )
+        self._aktion_thread.start()
+
+    def _stop_aktion_stream(self) -> None:
+        self._aktion_stop_event.set()
+        if self._aktion_thread and self._aktion_thread.is_alive():
+            self._aktion_thread.join(timeout=2.0)
+
+    def _run_aktion_stream(self) -> None:
+        try:
+            for entry in self.grpc_client.open_read_stream_aktion():
+                if self._aktion_stop_event.is_set():
+                    break
+                if (
+                    entry.aktion.aktions_status
+                    == testhmi_pb2.AKTIONS_STATUS_CLOSED
+                ):
+                    self._aktion_stop_event.set()
+                    break
+        except grpc.RpcError:
+            return
 
     def _build_zuweisung_entry(self):
         entry_id = self._parse_int(self.assign_number_entry.get())
@@ -197,6 +237,14 @@ class GrpcClient:
             self._stub.openWriteStreamZuweisung(self._convert_entries(entries))
         except grpc.RpcError:
             return
+
+    def open_read_stream_aktion(self):
+        if not self._enabled:
+            return iter(())
+        try:
+            return self._stub.openReadStreamAktion(empty_pb2.Empty())
+        except grpc.RpcError:
+            return iter(())
 
     def _convert_entries(self, entries):
         for entry in entries:

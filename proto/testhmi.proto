@@ -3,8 +3,27 @@ syntax = "proto3";
 package TESTHMI.V1;
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 import "openWriteStreamZuweisung.proto";
+
+message AktionEntry_m {
+  Aktion_m aktion = 1;
+}
+
+message Aktion_m {
+  google.protobuf.Timestamp timestamp = 1;
+  string id = 2;
+  uint32 aktions_nummer = 3;
+  AktionsStatus_e aktions_status = 4;
+}
+
+enum AktionsStatus_e {
+  AKTIONS_STATUS_UNSPECIFIED = 0;
+  AKTIONS_STATUS_START = 1;
+  AKTIONS_STATUS_CLOSED = 2;
+}
 
 service TestHmiService {
   rpc openWriteStreamZuweisung(stream ZuweisungEntry_m) returns (google.protobuf.Empty) {}
+  rpc openReadStreamAktion(google.protobuf.Empty) returns (stream AktionEntry_m) {}
 }
