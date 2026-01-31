@@ -58,6 +58,7 @@ class TestHMIApp:
         self._status_thread: threading.Thread | None = None
         self.grpc_client = GrpcClient()
         self.zuweisung_result_var = tk.StringVar(value="")
+        self.status_message_var = tk.StringVar(value="")
 
         self._build_layout()
         self._fit_window_to_content()
@@ -122,6 +123,15 @@ class TestHMIApp:
             text="Button 3",
             command=self._on_button3_clicked,
         ).grid(row=4, column=3, sticky="ew", pady=6)
+
+        ttk.Label(self.content, text="Status").grid(
+            row=5, column=0, sticky="w", pady=6
+        )
+        ttk.Entry(
+            self.content,
+            textvariable=self.status_message_var,
+            state="readonly",
+        ).grid(row=5, column=1, columnspan=3, sticky="ew", pady=6, padx=(8, 0))
 
     def _on_assign_clicked(self) -> None:
         if self.green_mode.get():
@@ -223,12 +233,19 @@ class TestHMIApp:
 
     def _run_status_stream(self) -> None:
         while not self._status_stop_event.is_set():
+            received_message = False
             try:
-                for _entry in self.grpc_client.open_read_stream_status():
+                for entry in self.grpc_client.open_read_stream_status():
                     if self._status_stop_event.is_set():
                         break
-            except grpc.RpcError:
-                pass
+                    received_message = True
+                    status_name = testhmi_pb2.OperationsStatus_e.Name(
+                        entry.aktion.operations_status
+                    )
+                    self._set_status_message(status_name)
+            except grpc.RpcError as error:
+                if not received_message:
+                    self._set_status_message(self._format_grpc_error(error))
             self._status_stop_event.wait(1.0)
 
     def _on_close(self) -> None:
@@ -247,6 +264,16 @@ class TestHMIApp:
 
     def _set_zuweisung_result(self, text: str) -> None:
         self.root.after(0, self.zuweisung_result_var.set, text)
+
+    def _set_status_message(self, text: str) -> None:
+        self.root.after(0, self.status_message_var.set, text)
+
+    @staticmethod
+    def _format_grpc_error(error: grpc.RpcError) -> str:
+        details = error.details()
+        if details:
+            return details
+        return str(error)
 
     @staticmethod
     def _parse_int(value: str) -> int:
@@ -300,10 +327,7 @@ class GrpcClient:
     def open_read_stream_status(self):
         if not self._enabled:
             return iter(())
-        try:
-            return self._stub.openReadStreamStatus(empty_pb2.Empty())
-        except grpc.RpcError:
-            return iter(())
+        return self._stub.openReadStreamStatus(empty_pb2.Empty())
 
     def _convert_entries(self, entries):
         for entry in entries:
