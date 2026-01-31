@@ -6,8 +6,8 @@ from tkinter import ttk
 import grpc
 from google.protobuf import timestamp_pb2
 
-import openWriteStreamZuweisung_pb2
-import testhmi_pb2_grpc
+from generated import openWriteStreamZuweisung_pb2
+from generated import testhmi_pb2_grpc
 
 
 def _validate_float(text: str) -> bool:
