@@ -38,8 +38,23 @@ enum OperationsStatus_e {
   OPERATIONS_STATUS_UNSPECIFIED = 0;
 }
 
+message DeleteZuweisungRequest {
+  uint32 target_id = 1;
+}
+
+message DeleteZuweisungResponse {
+  DeleteZuweisungResult_e success_state = 1;
+}
+
+enum DeleteZuweisungResult_e {
+  DELETE_ZUWEISUNG_RESULT_UNSPECIFIED = 0;
+  DELETE_ZUWEISUNG_RESULT_SUCCESS = 1;
+  DELETE_ZUWEISUNG_RESULT_ERROR = 2;
+}
+
 service TestHmiService {
   rpc openWriteStreamZuweisung(stream ZuweisungEntry_m) returns (google.protobuf.Empty) {}
   rpc openReadStreamAktion(google.protobuf.Empty) returns (stream AktionEntry_m) {}
   rpc openReadStreamStatus(google.protobuf.Empty) returns (stream StatusEntry_m) {}
+  rpc DeleteZuweisung(DeleteZuweisungRequest) returns (DeleteZuweisungResponse) {}
 }
