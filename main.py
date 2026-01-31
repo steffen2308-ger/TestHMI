@@ -54,11 +54,15 @@ class TestHMIApp:
         self._aktion_stop_event = threading.Event()
         self._aktion_thread: threading.Thread | None = None
         self._aktion_stream_started = False
+        self._status_stop_event = threading.Event()
+        self._status_thread: threading.Thread | None = None
         self.grpc_client = GrpcClient()
         self.zuweisung_result_var = tk.StringVar(value="")
 
         self._build_layout()
         self._fit_window_to_content()
+        self._start_status_stream()
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
     def _build_layout(self) -> None:
         ttk.Label(self.content, text="Nummer").grid(row=0, column=0, sticky="w", pady=6)
@@ -153,6 +157,22 @@ class TestHMIApp:
             self._zuweisung_thread.join(timeout=2.0)
         self._stop_aktion_stream()
 
+    def _start_status_stream(self) -> None:
+        if self._status_thread and self._status_thread.is_alive():
+            return
+        self._status_stop_event.clear()
+        self._status_thread = threading.Thread(
+            target=self._run_status_stream,
+            name="status-stream",
+            daemon=True,
+        )
+        self._status_thread.start()
+
+    def _stop_status_stream(self) -> None:
+        self._status_stop_event.set()
+        if self._status_thread and self._status_thread.is_alive():
+            self._status_thread.join(timeout=2.0)
+
     def _run_zuweisung_stream(self) -> None:
         response = self.grpc_client.open_write_stream_zuweisung(
             self._zuweisung_entry_generator()
@@ -200,6 +220,21 @@ class TestHMIApp:
                     break
         except grpc.RpcError:
             return
+
+    def _run_status_stream(self) -> None:
+        while not self._status_stop_event.is_set():
+            try:
+                for _entry in self.grpc_client.open_read_stream_status():
+                    if self._status_stop_event.is_set():
+                        break
+            except grpc.RpcError:
+                pass
+            self._status_stop_event.wait(1.0)
+
+    def _on_close(self) -> None:
+        self._stop_status_stream()
+        self._stop_zuweisung_stream()
+        self.root.destroy()
 
     def _build_zuweisung_entry(self):
         entry_id = self._parse_int(self.assign_number_entry.get())
@@ -259,6 +294,14 @@ class GrpcClient:
             return iter(())
         try:
             return self._stub.openReadStreamAktion(empty_pb2.Empty())
+        except grpc.RpcError:
+            return iter(())
+
+    def open_read_stream_status(self):
+        if not self._enabled:
+            return iter(())
+        try:
+            return self._stub.openReadStreamStatus(empty_pb2.Empty())
         except grpc.RpcError:
             return iter(())
 
