@@ -6,5 +6,10 @@ import "google/protobuf/empty.proto";
 import "openWriteStreamZuweisung.proto";
 
 service TestHmiService {
+  rpc openReadStreamAktion(google.protobuf.Empty) returns (stream AktionEntry_m) {}
+  rpc openReadStreamStatus(google.protobuf.Empty) returns (stream StatusEntry_m) {}
   rpc openWriteStreamZuweisung(stream ZuweisungEntry_m) returns (google.protobuf.Empty) {}
+  rpc DeleteZuweisung(DeleteZuweisungRequest) returns (DeleteZuweisungResponse) {}
+  rpc Button2Aktion(Button2Request) returns (Button2Response) {}
+  rpc setMode(ModeRequest) returns (ModeResponse) {}
 }
