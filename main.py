@@ -124,13 +124,16 @@ class TestHMIApp:
         self.delete_number_entry.grid(
             row=4, column=1, sticky="ew", padx=(8, 12), pady=6
         )
-        ttk.Button(self.content, text="Button 2").grid(
+        ttk.Button(
+            self.content,
+            text="Button 2",
+            command=self._on_button2_clicked,
+        ).grid(
             row=4,
             column=2,
             sticky="ew",
             pady=6,
             padx=(0, 8),
-            command=self._on_button2_clicked,
         )
         ttk.Button(
             self.content,
