@@ -55,6 +55,7 @@ class TestHMIApp:
         self._aktion_thread: threading.Thread | None = None
         self._aktion_stream_started = False
         self.grpc_client = GrpcClient()
+        self.zuweisung_result_var = tk.StringVar(value="")
 
         self._build_layout()
         self._fit_window_to_content()
@@ -74,6 +75,11 @@ class TestHMIApp:
             text="ZUweisen",
             command=self._on_assign_clicked,
         ).grid(row=0, column=2, sticky="ew", pady=6)
+        ttk.Entry(
+            self.content,
+            textvariable=self.zuweisung_result_var,
+            state="readonly",
+        ).grid(row=0, column=3, sticky="ew", pady=6, padx=(8, 0))
 
         ttk.Label(self.content, text="Mode").grid(row=1, column=0, sticky="w", pady=6)
         ttk.Checkbutton(
@@ -128,6 +134,7 @@ class TestHMIApp:
         if self._zuweisung_thread and self._zuweisung_thread.is_alive():
             return
         self._aktion_stream_started = False
+        self._set_zuweisung_result("")
         self._zuweisung_stop_event.clear()
         self._zuweisung_thread = threading.Thread(
             target=self._run_zuweisung_stream,
@@ -147,7 +154,13 @@ class TestHMIApp:
         self._stop_aktion_stream()
 
     def _run_zuweisung_stream(self) -> None:
-        self.grpc_client.open_write_stream_zuweisung(self._zuweisung_entry_generator())
+        response = self.grpc_client.open_write_stream_zuweisung(
+            self._zuweisung_entry_generator()
+        )
+        if response is None:
+            self._set_zuweisung_result("RPC-Fehler")
+        else:
+            self._set_zuweisung_result("OK")
 
     def _zuweisung_entry_generator(self):
         while not self._zuweisung_stop_event.is_set() and self.green_mode.get():
@@ -197,6 +210,9 @@ class TestHMIApp:
             timestamp=timestamp,
         )
 
+    def _set_zuweisung_result(self, text: str) -> None:
+        self.root.after(0, self.zuweisung_result_var.set, text)
+
     @staticmethod
     def _parse_int(value: str) -> int:
         try:
@@ -230,13 +246,13 @@ class GrpcClient:
         self._stub = testhmi_pb2_grpc.TestHmiServiceStub(self._channel)
         return True
 
-    def open_write_stream_zuweisung(self, entries) -> None:
+    def open_write_stream_zuweisung(self, entries) -> empty_pb2.Empty | None:
         if not self._enabled:
-            return
+            return None
         try:
-            self._stub.openWriteStreamZuweisung(self._convert_entries(entries))
+            return self._stub.openWriteStreamZuweisung(self._convert_entries(entries))
         except grpc.RpcError:
-            return
+            return None
 
     def open_read_stream_aktion(self):
         if not self._enabled:
