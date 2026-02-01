@@ -208,7 +208,7 @@ class TestHMIApp:
         target_id = self._parse_int(self.delete_number_entry.get())
         response = self.grpc_client.delete_zuweisung(target_id)
         if response is None:
-            self._set_status_message("RPC-Fehler")
+            self._set_status_message(self._grpc_error_message("RPC-Fehler"))
             return
         result_name = testhmi_pb2.DeleteZuweisungResult_e.Name(
             response.success_state
@@ -222,7 +222,7 @@ class TestHMIApp:
         request_id = raw_id or str(nummer)
         response = self.grpc_client.button2_aktion(request_id, nummer)
         if response is None:
-            self._set_status_message("RPC-Fehler")
+            self._set_status_message(self._grpc_error_message("RPC-Fehler"))
             return
         result_name = testhmi_pb2.Button2Result_e.Name(response.button2_result)
         self._set_status_message(result_name)
@@ -288,6 +288,7 @@ class TestHMIApp:
         )
         if response is None:
             self._set_zuweisung_result("RPC-Fehler")
+            self._set_status_message(self._grpc_error_message("Stream-Fehler"))
         else:
             self._set_zuweisung_result("OK")
 
@@ -338,6 +339,7 @@ class TestHMIApp:
                 if error.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
                     self._log_stream_wait("Aktion")
                     continue
+                self._set_status_message(self._format_grpc_error(error))
                 return
 
     def _run_status_stream(self) -> None:
@@ -391,6 +393,11 @@ class TestHMIApp:
         """Update the output field on the UI thread."""
         self.root.after(0, self.output_message_var.set, text)
 
+    def _grpc_error_message(self, fallback: str) -> str:
+        """Return the last gRPC error if available, otherwise a fallback."""
+        message = self.grpc_client.last_error
+        return message if message else fallback
+
     def _log_stream_wait(self, stream_name: str) -> None:
         """Log that we're still waiting for stream data."""
         print(f"Warte auf {stream_name}-Nachrichten...")
@@ -434,6 +441,7 @@ class GrpcClient:
         self.address = address
         self._channel = None
         self._stub = None
+        self._last_error = ""
         self._enabled = self._initialize_grpc()
 
     def _initialize_grpc(self) -> bool:
@@ -448,7 +456,8 @@ class GrpcClient:
             return None
         try:
             return self._stub.openWriteStreamZuweisung(self._convert_entries(entries))
-        except grpc.RpcError:
+        except grpc.RpcError as error:
+            self._record_error("openWriteStreamZuweisung", error)
             return None
 
     def open_read_stream_aktion(self, timeout: float | None = None):
@@ -459,14 +468,19 @@ class GrpcClient:
             return self._stub.openReadStreamAktion(
                 empty_pb2.Empty(), timeout=timeout
             )
-        except grpc.RpcError:
+        except grpc.RpcError as error:
+            self._record_error("openReadStreamAktion", error)
             return iter(())
 
     def open_read_stream_status(self, timeout: float | None = None):
         """Read Status entries until the stream ends."""
         if not self._enabled:
             return iter(())
-        return self._stub.openReadStreamStatus(empty_pb2.Empty(), timeout=timeout)
+        try:
+            return self._stub.openReadStreamStatus(empty_pb2.Empty(), timeout=timeout)
+        except grpc.RpcError as error:
+            self._record_error("openReadStreamStatus", error)
+            return iter(())
 
     def delete_zuweisung(
         self, target_id: int
@@ -477,7 +491,8 @@ class GrpcClient:
         request = testhmi_pb2.DeleteZuweisungRequest(target_id=target_id)
         try:
             return self._stub.DeleteZuweisung(request)
-        except grpc.RpcError:
+        except grpc.RpcError as error:
+            self._record_error("DeleteZuweisung", error)
             return None
 
     def button2_aktion(
@@ -489,8 +504,19 @@ class GrpcClient:
         request = testhmi_pb2.Button2Request(id=request_id, nummer=nummer)
         try:
             return self._stub.Button2Aktion(request)
-        except grpc.RpcError:
+        except grpc.RpcError as error:
+            self._record_error("Button2Aktion", error)
             return None
+
+    @property
+    def last_error(self) -> str:
+        return self._last_error
+
+    def _record_error(self, context: str, error: grpc.RpcError) -> None:
+        details = error.details() or str(error)
+        code = error.code()
+        self._last_error = f"{context}: {code} - {details}"
+        print(f"[gRPC] {self._last_error}")
 
     def _convert_entries(self, entries):
         """Yield proto payloads from UI data objects."""
