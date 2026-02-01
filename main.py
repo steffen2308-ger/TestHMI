@@ -86,6 +86,7 @@ class TestHMIApp:
         self.status_message_var = tk.StringVar(value="")
         self.output_message_var = tk.StringVar(value="")
         self.operation_mode = tk.StringVar(value="mode1")
+        self._stream_wait_timeout = 5.0
 
         self._build_layout()
         self._fit_window_to_content()
@@ -320,25 +321,33 @@ class TestHMIApp:
 
     def _run_aktion_stream(self) -> None:
         """Background worker that listens for Aktion status updates."""
-        try:
-            for entry in self.grpc_client.open_read_stream_aktion():
-                if self._aktion_stop_event.is_set():
-                    break
-                if (
-                    entry.aktion.aktions_status
-                    == testhmi_pb2.AKTIONS_STATUS_CLOSED
+        while not self._aktion_stop_event.is_set():
+            try:
+                for entry in self.grpc_client.open_read_stream_aktion(
+                    timeout=self._stream_wait_timeout
                 ):
-                    self._aktion_stop_event.set()
-                    break
-        except grpc.RpcError:
-            return
+                    if self._aktion_stop_event.is_set():
+                        break
+                    if (
+                        entry.aktion.aktions_status
+                        == testhmi_pb2.AKTIONS_STATUS_CLOSED
+                    ):
+                        self._aktion_stop_event.set()
+                        break
+            except grpc.RpcError as error:
+                if error.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
+                    self._log_stream_wait("Aktion")
+                    continue
+                return
 
     def _run_status_stream(self) -> None:
         """Background worker that listens for Status updates."""
         while not self._status_stop_event.is_set():
             received_message = False
             try:
-                for entry in self.grpc_client.open_read_stream_status():
+                for entry in self.grpc_client.open_read_stream_status(
+                    timeout=self._stream_wait_timeout
+                ):
                     if self._status_stop_event.is_set():
                         break
                     received_message = True
@@ -347,6 +356,9 @@ class TestHMIApp:
                     )
                     self._set_status_message(status_name)
             except grpc.RpcError as error:
+                if error.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
+                    self._log_stream_wait("Status")
+                    continue
                 if not received_message:
                     self._set_status_message(self._format_grpc_error(error))
             self._status_stop_event.wait(1.0)
@@ -378,6 +390,10 @@ class TestHMIApp:
     def _set_output_message(self, text: str) -> None:
         """Update the output field on the UI thread."""
         self.root.after(0, self.output_message_var.set, text)
+
+    def _log_stream_wait(self, stream_name: str) -> None:
+        """Log that we're still waiting for stream data."""
+        print(f"Warte auf {stream_name}-Nachrichten...")
 
     @staticmethod
     def _format_grpc_error(error: grpc.RpcError) -> str:
@@ -435,20 +451,22 @@ class GrpcClient:
         except grpc.RpcError:
             return None
 
-    def open_read_stream_aktion(self):
+    def open_read_stream_aktion(self, timeout: float | None = None):
         """Read Aktion entries until the stream ends."""
         if not self._enabled:
             return iter(())
         try:
-            return self._stub.openReadStreamAktion(empty_pb2.Empty())
+            return self._stub.openReadStreamAktion(
+                empty_pb2.Empty(), timeout=timeout
+            )
         except grpc.RpcError:
             return iter(())
 
-    def open_read_stream_status(self):
+    def open_read_stream_status(self, timeout: float | None = None):
         """Read Status entries until the stream ends."""
         if not self._enabled:
             return iter(())
-        return self._stub.openReadStreamStatus(empty_pb2.Empty())
+        return self._stub.openReadStreamStatus(empty_pb2.Empty(), timeout=timeout)
 
     def delete_zuweisung(
         self, target_id: int
